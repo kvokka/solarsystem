@@ -46,17 +46,13 @@ jobs:
 
     # 5. Run PyInstaller to build the executable
     - name: Build executable with PyInstaller
-      run: |
-        pyinstaller --name SolarSystemSim \
-                    --onefile \
-                    --windowed \
-                    main.py
         # Notes:
         # --name: Sets the name of the output executable/bundle.
         # --onefile: Bundles everything into a single executable file.
         # --windowed: Prevents a console window from opening on runtime (essential for GUI apps).
         #             On Windows, this is equivalent to --noconsole.
         # main.py: Your main script entry point.
+      run: pyinstaller --name SolarSystemSim --onefile --windowed main.py # <-- FIX: Command is now on a single line
 
     # 6. Upload the built artifact
     #    The executable will be in the 'dist' directory created by PyInstaller.
