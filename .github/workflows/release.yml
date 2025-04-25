@@ -1,0 +1,71 @@
+name: Build Executables
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events but only for the main branch
+  push:
+    branches: [ main ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Use a matrix strategy to run the job on different OSes
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        # You can specify Python versions if needed, but 3.11 is a good default
+        # python-version: ['3.9', '3.10', '3.11']
+
+    runs-on: ${{ matrix.os }} # Use the OS from the matrix
+
+    steps:
+    # 1. Check-out repository code so the workflow can access it
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # 2. Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Choose a version compatible with your code (>= 3.8)
+
+    # 3. Install dependencies (PyInstaller is the main one for building)
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+
+    # 4. (Linux specific) Install Tkinter development headers and libraries
+    #    PyInstaller often needs these on Linux to correctly bundle Tkinter.
+    - name: Install Tkinter dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk tk-dev
+
+    # 5. Run PyInstaller to build the executable
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller --name SolarSystemSim \
+                    --onefile \
+                    --windowed \
+                    main.py
+        # Notes:
+        # --name: Sets the name of the output executable/bundle.
+        # --onefile: Bundles everything into a single executable file.
+        # --windowed: Prevents a console window from opening on runtime (essential for GUI apps).
+        #             On Windows, this is equivalent to --noconsole.
+        # main.py: Your main script entry point.
+
+    # 6. Upload the built artifact
+    #    The executable will be in the 'dist' directory created by PyInstaller.
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        # Name the artifact based on the OS - easier to identify downloads
+        name: SolarSystemSim-${{ matrix.os }}
+        # Path to the file(s) to upload. 'dist' contains the final build.
+        path: dist/
+        # Optional: How long to retain the artifact (default is 90 days)
+        # retention-days: 7
